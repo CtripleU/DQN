@@ -1,8 +1,14 @@
 import numpy as np
 import gym
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
-from keras.optimizers import Adam
+import tensorflow as tf
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Flatten
+from tensorflow.keras.optimizers.legacy import Adam
+
+from keras import __version__
+tf.keras.__version__ = __version__
+
 from rl.agents.dqn import DQNAgent
 from rl.policy import EpsGreedyQPolicy
 from rl.memory import SequentialMemory
@@ -26,11 +32,4 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmu
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 dqn.load_weights('dqn_education_weights.h5f')
 
-for episode in range(5):
-    state = env.reset()
-    done = False
-    while not done:
-        action = np.argmax(dqn.model.predict(state.reshape(1, 1, 5, 5))[0])
-        state, reward, done, _ = env.step(action)
-        env.render()
-        print(f"Action: {action}, Reward: {reward}, Done: {done}")
+dqn.test(env, nb_episodes=5, visualize=True)
