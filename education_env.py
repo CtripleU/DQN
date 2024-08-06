@@ -2,7 +2,6 @@ import gym
 import numpy as np
 from gym import spaces
 
-
 class EducationEnv(gym.Env):
     def __init__(self):
         super(EducationEnv, self).__init__()
@@ -24,7 +23,7 @@ class EducationEnv(gym.Env):
         self.current_task = None
 
     def reset(self):
-        self.state = np.array([0.3, 0.3, 0.3, 0.5, 1.0, 0.0])  # Initial state
+        self.state = np.array([0.3, 0.3, 0.3, 0.5, 1.0, 0.0])
         self.steps = 0
         self.current_task = None
         return self.state
@@ -59,11 +58,11 @@ class EducationEnv(gym.Env):
 
     def _perform_learning_activity(self, activity):
         self.current_task = activity
-        if activity == 0:  # Reading
+        if activity == 0:  # reading
             self.state[0] += np.random.uniform(0.05, 0.1) * self.state[4]  # affected by focus
-        elif activity == 1:  # Math
+        elif activity == 1:  # math
             self.state[1] += np.random.uniform(0.05, 0.1) * self.state[4]  # affected by focus
-        elif activity == 2:  # Group discussion
+        elif activity == 2:  # group discussion
             self.state[2] += np.random.uniform(0.05, 0.1) * self.state[4]  # affected by focus
 
     def _select_difficulty(self, level):
