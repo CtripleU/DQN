@@ -73,10 +73,19 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
-    # Take a step in the environment
-    action = env.action_space.sample()  # Replace with your agent's action
+
+    # Predict the action using the model
+    action = dqn.forward(state)
+    # state, _, done, _ = env.step(action)
     state, reward, done, info = env.step(action)
+    if done:
+        state = env.reset()
+
+    print(f"State: {state}")
+    
+    # # Take a step in the environment
+    # action = env.action_space.sample()
+    # state, reward, done, info = env.step(action)
 
     # Draw the environment
     draw_environment(state)
