@@ -15,33 +15,31 @@ from rl.policy import EpsGreedyQPolicy
 from rl.memory import SequentialMemory
 from education_env import EducationEnv
 
-env = EducationEnv()
-nb_actions = env.action_space.n
-
-# # Build the model
-# model = Sequential()
-# model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
-# model.add(Dense(24))
-# model.add(Activation('relu'))
-# model.add(Dense(24))
-# model.add(Activation('relu'))
-# model.add(Dense(nb_actions))
-# model.add(Activation('linear'))
-
-# memory = SequentialMemory(limit=50000, window_length=1)
-# policy = EpsGreedyQPolicy()
-# dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
-#                target_model_update=1e-2, policy=policy)
-# dqn.compile(Adam(lr=1e-3), metrics=['mae'])
-
-# load trained weights
-dqn.load_weights('dqn_education_weights.h5f')
-
+# Initialize Pygame
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
-pygame.display.set_caption("Education Environment Visualization")
+pygame.display.set_caption('Education Environment Visualization')
 
-def draw_environment(state, action, reward, episode, step):
+# Load the environment
+env = EducationEnv()
+
+# Load the model
+nb_actions = env.action_space.n
+model = Sequential()
+model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+model.add(Dense(24, activation='relu'))
+model.add(Dense(24, activation='relu'))
+model.add(Dense(nb_actions, activation='linear'))
+
+policy = EpsGreedyQPolicy()
+memory = SequentialMemory(limit=50000, window_length=1)
+dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10, target_model_update=1e-2, policy=policy)
+dqn.compile(Adam(learning_rate=1e-3), metrics=['mae'])
+
+# Load the weights
+dqn.load_weights('dqn_education_weights.h5f')
+
+def draw_environment(state):
     screen.fill((255, 255, 255))
 
     pygame.draw.rect(screen, (255, 0, 0), (50, 50, state[0] * 200, 30))
@@ -66,46 +64,26 @@ def draw_environment(state, action, reward, episode, step):
     help_text = 'Yes' if state[5] > 0.5 else 'No'
     screen.blit(pygame.font.SysFont(None, 24).render(f'Help Requested: {help_text}', True, (0, 0, 0)), (50, 280))
 
-    action_texts = ['Reading', 'Math', 'Group Discussion', 'Easy', 'Medium', 'Hard', 'Request Help']
-    screen.blit(pygame.font.SysFont(None, 24).render(f'Action: {action_texts[action]}', True, (0, 0, 0)), (50, 310))
-    screen.blit(pygame.font.SysFont(None, 24).render(f'Reward: {reward:.2f}', True, (0, 0, 0)), (50, 340))
-    screen.blit(pygame.font.SysFont(None, 24).render(f'Episode: {episode}', True, (0, 0, 0)), (50, 370))
-    screen.blit(pygame.font.SysFont(None, 24).render(f'Step: {step}', True, (0, 0, 0)), (50, 400))
-
     pygame.display.flip()
 
+# Main loop
 running = True
-paused = False
 state = env.reset()
-episode = 1
-step = 0
-clock = pygame.time.Clock()
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                paused = not paused
-            elif event.key == pygame.K_UP:
-                clock.tick(10)  # increase speed
-            elif event.key == pygame.K_DOWN:
-                clock.tick(1)  # decrease speed
+    
+    # Take a step in the environment
+    action = env.action_space.sample()  # Replace with your agent's action
+    state, reward, done, info = env.step(action)
 
-    if not paused:
-        action = np.argmax(dqn.model.predict(state.reshape(1, 1, 6))[0])
-        next_state, reward, done, _ = env.step(action)
+    # Draw the environment
+    draw_environment(state)
 
-        draw_environment(next_state, action, reward, episode, step)
+    if done:
+        state = env.reset()
 
-        state = next_state
-        step += 1
-
-        if done:
-            state = env.reset()
-            episode += 1
-            step = 0
-
-    clock.tick(5)
+    pygame.time.wait(100)
 
 pygame.quit()
